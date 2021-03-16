@@ -59,11 +59,21 @@ export default class Grades {
   query(courseId, options={}) {
     const { projectionSpec=[], selectionSpec={} } = options;
     //@TODO
+	if(this._precomputed.includes(courseID) {
+		
+	}
     return { [courseId]: [] } //@TODO: replace
   }
 
+	_precompute(courseId) {
+		let obj = {
+			this.table = courseId._grades;
+			this.types = makeIdTypes(courseId._grades);
+		}
+		return obj;
+  	}
   //@TODO: add code as required
-  
+  	
 }
 
 //@TODO: add code as required
