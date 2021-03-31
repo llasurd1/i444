@@ -4,7 +4,7 @@
   "description": "Name:\t\tXXX B-Number:\tXXX Email:\t\tXXX",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/",
+    "test": "mocha",
     "debug-test": "mocha --inspect-brk test/"
   },
   "keywords": [],
