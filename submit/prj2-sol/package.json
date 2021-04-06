@@ -12,5 +12,10 @@
   "devDependencies": {
     "chai": "^4.3.4",
     "mocha": "^8.3.2"
+  },
+  "dependencies": {
+    "course-grades": "file:../../../cs544/lib/course-grades",
+    "courses-info": "file:../../../cs544/lib/courses-info",
+    "mongodb": "^3.6.3"
   }
 }
