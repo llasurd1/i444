@@ -14,16 +14,19 @@ export default class DBGrades {
   }
   //factory method
   static async make(dbUrl) {
-	let errors = [];
+	const errors = [];
 	try {
-		const db = await mongo.connect(dbUrl, MONGO_CONNECT_OPTIONS);
-		const handler = db.db('main');
+		const handler = await mongo.connect(dbUrl, MONGO_CONNECT_OPTIONS);
+		const db = handler.db('main');
 		const dbg = new DBGrades(db, handler);
+		return dbg;
 	}
 	catch(err) {
 		errors.push(new AppError("DB: cannot connect to URL " + dbUrl + ": "+ err));
 	}
-    return (errors.length > 0) ? { errors } : dbg;
+   	if(errors.length > 0) {
+   		return errors
+   	}
   }
 
   /** Release all resources held by this instance.
@@ -31,17 +34,16 @@ export default class DBGrades {
    */
   async close() {
 	await this.handler.close();
-	return;
+	return;	
   }
 
   
   /** set all grades for courseId to rawGrades */
   async import(courseInfo, rawGrades) {
-    //@TODO
 	const errors = [];
 	try {
-		var gtable = this.db.collection(courseInfo);
-		await gtable.updateOne({courseId: courseInfo.id}, {$set: rawGrades}, {upsert: true});
+		var gtable = this.db.collection(courseInfo.id);
+		await gtable.updateOne({courseId: courseInfo.id}, {$set:{grades: rawGrades}}, {upsert: true});
 	}
 	catch(err) {
 		errors.push(new AppError("Error importing: " + err));
@@ -56,7 +58,22 @@ export default class DBGrades {
    *  courseId, replacing previous entries if any.
    */
   async add(courseInfo, triples) {
-    //@TODO
+    const errors = [];
+    try {
+    	var rawData = await this.raw(courseInfo);
+    	try {
+    		var grades = await CourseGrades.make(courseInfo, rawData);
+    		grades = await grades.add(triples);
+    		await this.import(courseInfo, grades.raw());
+    	}
+    	catch(err) {
+    		errors.push(new AppError("Error importing: " + err));
+    	}
+    }
+    catch(err) {
+    		errors.push(new AppError("Cannot find course: " + err));
+    }
+  
   }
 
   /** Clear out all courses */
@@ -74,37 +91,45 @@ export default class DBGrades {
    *  projected as per options.projectionSpec.
    */
   async query(courseInfo, options) {
-    //@TODO
-	let errors = [];
+	const errors = [];
 	try {
-		const data = raw(courseInfo);
-	}
-	catch {
-		errors.push(new AppError("Error exporting: " + err));
-	}
-	try {
-		const grades = course-grades.make*courseInfo, data);
-	}
-	catch {
-		errors.push(new AppError("Error making new coursegrades: " + err));
-	}
-	return grades.query(options);
-  }
-
-  /** return raw grades without stats for courseId */
-  async raw(courseInfo) { 
-    //@TODO
-	let errors = [];
-	try {
-		var gtable = this.db.collection(courseInfo);
-		let ret = gtable._grades;
+		var data = await this.raw(courseInfo);
+		try {
+			const grades = await CourseGrades.make(courseInfo, data);
+			return grades.query(options);
+		}
+		catch(err) {
+			errors.push(new AppError("Error making new coursegrades: " + err));
+		}
 	}
 	catch(err) {
 		errors.push(new AppError("Error exporting: " + err));
 	}
-    return (errors.length > 0) ? { errors } : ret;
+	if(errors.length>0) { 
+		return errors;
+	}
+	
 	
   }
+
+  /** return raw grades without stats for courseId */
+  async raw(courseInfo) { 
+	const errors = [];
+	try {
+		var gtable = await this.db.collection(courseInfo.id);
+		var ret = gtable.distinct('grades');
+		return ret;
+	}
+	catch(err) {
+		errors.push(new AppError("Error exporting: " + err));
+	}
+    if (errors.length > 0) {
+    	return errors;
+    }
+	
+  }
+
+}
 
 }
 
