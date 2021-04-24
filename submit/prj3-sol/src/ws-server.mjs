@@ -31,9 +31,16 @@ export default function serve(port, model, base='') {
 function setupRoutes(app) {
   const base = app.locals.base;
   app.use(cors());
+  app.use(bodyParser.json());
 
   //TODO: set up routes
-
+  app.get(`/:id/raw`, doGrades(app));
+  app.get(`/:id/grades`, doStats(app));
+  app.get(`/:id/students/:s_id`, doStudent(app));
+  app.patch(`/:id/raw`, doUpdate(app));
+  app.use(do404(app));
+  app.use(doErrors(app));
+  
 }
 
 /* Suggested structure for setting up a handler
@@ -59,6 +66,79 @@ function handler(app) {
 /** Default handler for when there is no route for a particular method
  *  and path.
  */
+ 
+function doGrades(app) {
+	return (async function(req, res) {
+		try{
+			const id = req.params.id;
+			let info = await getCourseInfo(id);
+			const result = await app.locals.model.raw(info);
+			if(result.errors) throw result;
+			res.json(result);
+		}
+		catch(err) {
+			const mapped  = mapResultErrors(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});	
+}
+ 
+function doStats(app) {
+	return (async function(req, res) {
+		try{
+			const id = req.params.id;
+			let info = await getCourseInfo(id);
+			const result = await app.locals.model.query(info, []);
+			if(result.errors) throw result;
+			res.json(result);
+		}
+		catch(err) {
+			const mapped  = mapResultErrors(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});	
+}
+ 
+function doStudent(app) {
+	return (async function(req, res) {
+		try{
+			const id = req.params.id;
+			const studentId = req.params.s_id;
+			let info = await getCourseInfo(id);
+			const table = await app.locals.model.query(info, []);
+			const result = await table.filter(function (x) {
+				return x.emailId == studentId || x.$stats != "";
+			});
+			const result1 = await result.filter(function (x) {
+				return x.emailId == studentId;
+			});
+			if(result.errors) throw result;
+			else if(result1.length == 0) throw new Error("student not found");
+			res.json(result);
+		}
+		catch(err) {
+			const mapped  = mapResultErrors(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});	
+}
+
+function doUpdate(app) {
+	return (async function(req, res) {
+		try{
+			const id = req.params.id;
+			let info = await getCourseInfo(id);
+			const result = await app.locals.model.add(info, req.body);
+			if(result.errors) throw result;
+			res.json(result);
+		}
+		catch(err) {
+			const mapped  = mapResultErrors(err);
+			res.status(mapped.status).json(mapped);
+		}
+	});	
+} 
+ 
 function do404(app) {
   return async function(req, res) {
     const message = `${req.method} not supported for ${req.originalUrl}`;
