@@ -9,11 +9,14 @@ export default class GradesApp extends HTMLElement {
    *  in the DOM.  Will have courseId, courseInfo and
    *  gradesTable properties.
    */
+  
   connectedCallback() {
-    const { courseId, courseInfo, gradesTable } = this;
+    const {courseId, courseInfo, gradesTable } = this;
+    
     let html = STYLE;
-    html += `<pre>${JSON.stringify(this, null, 2)}</pre>`;
+    html += `<pre> <h2> ${courseInfo.name} </h2> ${JSON.stringify(this, null, 2)} </pre>`;
     // TODO: replace above line which builds out component as per spec.
+    //
     this.shadowRoot.innerHTML = html;
   }
 
@@ -26,7 +29,9 @@ export default class GradesApp extends HTMLElement {
 
 
 const STYLE = `
+
 <style>
+
 .grades {
   margin: 10px;
   border-collapse: collapse;

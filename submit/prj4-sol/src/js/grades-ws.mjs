@@ -12,7 +12,22 @@ export default class GradesWs {
    */
   async grades(courseId, queryParams) {
     // TODO
-    return `dummy grades for "${courseId}"`;
+    try{
+    	const param = queryParams.sessionId;
+    	const response  = await (await fetch(`${this.url}/${courseId}/grades?sessionId=${param}`, {
+    		method: 'GET',
+    	}));
+    	if(response.ok) {
+    		return response.json();
+    	}
+    	else
+    		return new AppErrors().add(new AppErrors("error"));
+    }
+    catch(err) {
+	return new AppErrors().add(err);	
+    }
+    
+    
   }
 
   /** Make a `GET` request to /:courseId/raw?queryParams.
@@ -28,9 +43,22 @@ export default class GradesWs {
    *  /:courseId/students/:studentId?queryParams.  Return success
    *  object or object having an errors property.
    */
-  async student(courseId, studentId, queryParams) {
-    // TODO
-    return `dummy ${studentId} student grades for "${courseId}"`;
+  async student(courseId, studentId, queryParams) { 
+    try{
+    	const param = queryParams.sessionId;
+    	const response  = await( await fetch(`${this.url}/${courseId}/students/${studentId}?sessionId=${param}`, {
+    		method: 'GET',
+    	}));
+    	if(response.ok) {
+    		return response.json();
+    	}
+    	else
+    		return new AppErrors().add(new AppErrors("error"));
+    }
+    catch(err) {
+	return new AppErrors().add(err);	
+    }
+   
   }
 
   /** Make a `PATCH` request to /courseId/grades?queryParams passing
