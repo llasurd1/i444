@@ -49,6 +49,7 @@ with rows having empty `emailId`'s sorted stably at the bottom.
 
 */
 
+
 export default class GradesTable extends React.Component {
   constructor(props) {
     super(props);
@@ -65,13 +66,66 @@ export default class GradesTable extends React.Component {
   }
 
   renderTable() {
-    //TODO: replace below dump code with table rendering code
-    const jsonDump = JSON.stringify(this.props, null, 2);
-    return <pre>{jsonDump}</pre>;
+  	
+  	  return (
+  		<div>
+            		<table id= 'students'>
+               		<tbody>
+               			 <tr>{this.renderTableHeader()}</tr>
+                 			 {this.renderTableData()}
+              			 </tbody>
+            		</table>
+        	 </div>
+  	)
   }
+  
+ 
+    	
+  renderTableData() {
+  	 const gradesTable = this.props.courseGrades.statGrades;
+  	 const hdrs = {};
+  	 const hdr = Object.keys(hdrs);
+  	 for(const row of gradesTable) {
+  	 	for(const k of Object.keys(row)) hdrs[k] ||= 1;
+  	 }
+  	 const rs = Array.from(gradesTable).sort(cmpEmailIdFn);
+  	 const rows = Object.values(rs[0]);
+  	 const rxml = [];
+  	 for(const row of rs) {
+  	 	const rows = Object.values(row);
+  	 	rxml.push(<tr key = {row.emailId}/>);
+  	 	rxml.push(rows.map((r) => <td key = {r.colId}>{r}</td>));
+  	 }
+  	 return rxml;	
+  	 	
+   }
+   
+   renderTableHeader() {
+      let header = Object.keys(this.props.courseGrades.statGrades[0])
+      return header.map((key, index) => {
+         return <th key={index}>{key.toUpperCase()}</th>
+      })
+   }
 
+	
 }
 
+function cmpEmailIdFn(a, b) {
+  	const aEmail = (a.emailId || '').trim();
+ 	const bEmail = (b.emailId || '').trim();
+ 	if (aEmail && bEmail) {
+   		return aEmail.localeCompare(bEmail);
+  	}
+ 	else if (aEmail) {
+    		return -1;
+  	}
+  	else if (bEmail) {
+    		return +1;
+  	}
+  	else {
+    		return 0;
+  	}
+}
 //TODO: add auxiliary functions and classes as necessary
 
 function Errors(props) {
@@ -81,3 +135,4 @@ function Errors(props) {
     errors.map((err, i) => <li key={i}>{err.message ?? err.toString()}</li>);
   return <ul className="errors">{errs}</ul>;
 }
+
